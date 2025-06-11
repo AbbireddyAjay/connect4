@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect 4 Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: white;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-info {
+            margin-bottom: 20px;
+        }
+
+        .current-player {
+            color: white;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .player-indicator {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            margin-left: 10px;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .board {
+            background: #2c5aa0;
+            border-radius: 15px;
+            padding: 20px;
+            display: inline-block;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border: 4px solid #1e3a5f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 8px;
+            max-width: 90vw;
+            aspect-ratio: 7/6;
+            width: min(500px, 80vw);
+        }
+
+        .cell {
+            background: #1e3a5f;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #0f1f3d;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .cell.red {
+            background: linear-gradient(145deg, #ff4757, #c44569);
+            border-color: #b33939;
+            animation: dropPiece 0.5s ease-out;
+        }
+
+        .cell.blue {
+            background: linear-gradient(145deg, #3742fa, #2f3542);
+            border-color: #1e2348;
+            animation: dropPiece 0.5s ease-out;
+        }
+
+        @keyframes dropPiece {
+            0% {
+                transform: translateY(-200px) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-10px) scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .winner-message {
+            color: white;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.5s ease;
+        }
+
+        .winner-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(145deg, #ee5a52, #ff6b6b);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .board {
+                padding: 15px;
+            }
+            
+            .grid {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .grid {
+                gap: 4px;
+            }
+            
+            .board {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Connect 4</h1>
+        
+        <div class="game-info">
+            <div class="current-player">
+                Current Player: <span id="current-player-text">Red</span>
+                <span id="player-indicator" class="player-indicator" style="background: #ff4757;"></span>
+            </div>
+        </div>
+
+        <div class="board">
+            <div class="grid" id="game-board"></div>
+        </div>
+
+        <div id="winner-message" class="winner-message"></div>
+        
+        <button class="reset-btn" onclick="resetGame()">New Game</button>
+    </div>
+
+    <script>
+        let board = Array(6).fill().map(() => Array(7).fill(0));
+        let currentPlayer = 1; // 1 for red, 2 for blue
+        let gameOver = false;
+
+        function initializeBoard() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+            
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', () => handleCellClick(col));
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(col) {
+            if (gameOver) return;
+            
+            // Find the lowest empty row in the column
+            for (let row = 5; row >= 0; row--) {
+                if (board[row][col] === 0) {
+                    board[row][col] = currentPlayer;
+                    updateCell(row, col, currentPlayer);
+                    
+                    if (checkWinner(row, col)) {
+                        displayWinner();
+                        gameOver = true;
+                        return;
+                    }
+                    
+                    if (checkDraw()) {
+                        displayDraw();
+                        gameOver = true;
+                        return;
+                    }
+                    
+                    switchPlayer();
+                    return;
+                }
+            }
+        }
+
+        function updateCell(row, col, player) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.className = `cell ${player === 1 ? 'red' : 'blue'}`;
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            const playerText = document.getElementById('current-player-text');
+            const playerIndicator = document.getElementById('player-indicator');
+            
+            if (currentPlayer === 1) {
+                playerText.textContent = 'Red';
+                playerIndicator.style.background = '#ff4757';
+            } else {
+                playerText.textContent = 'Blue';
+                playerIndicator.style.background = '#3742fa';
+            }
+        }
+
+        function checkWinner(row, col) {
+            const directions = [
+                [0, 1],   // horizontal
+                [1, 0],   // vertical
+                [1, 1],   // diagonal /
+                [1, -1]   // diagonal \
+            ];
+
+            for (let [dx, dy] of directions) {
+                let count = 1; // count the current piece
+                
+                // Check in positive direction
+                let r = row + dx;
+                let c = col + dy;
+                while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === currentPlayer) {
+                    count++;
+                    r += dx;
+                    c += dy;
+                }
+                
+                // Check in negative direction
+                r = row - dx;
+                c = col - dy;
+                while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === currentPlayer) {
+                    count++;
+                    r -= dx;
+                    c -= dy;
+                }
+                
+                if (count >= 4) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkDraw() {
+            return board[0].every(cell => cell !== 0);
+        }
+
+        function displayWinner() {
+            const winnerMessage = document.getElementById('winner-message');
+            const playerName = currentPlayer === 1 ? 'Red' : 'Blue';
+            winnerMessage.textContent = ` ${playerName} Player Wins!`;
+            winnerMessage.classList.add('show');
+        }
+
+        function displayDraw() {
+            const winnerMessage = document.getElementById('winner-message');
+            winnerMessage.textContent = ` It's a Draw! `;
+            winnerMessage.classList.add('show');
+        }
+
+        function resetGame() {
+            board = Array(6).fill().map(() => Array(7).fill(0));
+            currentPlayer = 1;
+            gameOver = false;
+            
+            const winnerMessage = document.getElementById('winner-message');
+            winnerMessage.classList.remove('show');
+            
+            const playerText = document.getElementById('current-player-text');
+            const playerIndicator = document.getElementById('player-indicator');
+            playerText.textContent = 'Red';
+            playerIndicator.style.background = '#ff4757';
+            
+            initializeBoard();
+        }
+
+        // Initialize the game
+        initializeBoard();
+    </script>
+</body>
+</html>
